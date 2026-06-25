@@ -935,3 +935,124 @@ body {
         font-size: 0.65rem;
     }
 }
+/* ==========================================================
+   TAMPILAN MOBILE (Layar HP di bawah 768px)
+   ========================================================== */
+@media (max-width: 768px) {
+    
+    /* 1. Layout Utama & Sidebar */
+    .app-container {
+        display: flex;
+        flex-direction: column; /* Mengubah layout kiri-kanan menjadi atas-bawah */
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        min-height: auto;
+        padding: 15px;
+        position: relative;
+    }
+
+    /* Membuat menu sidebar menjadi horizontal dan bisa di-scroll ke samping di HP */
+    .sidebar-nav ul {
+        display: flex;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 5px;
+        gap: 10px;
+    }
+
+    .sidebar-nav ul li {
+        margin-bottom: 0;
+        flex: 0 0 auto;
+    }
+
+    /* 2. Header & Pencarian */
+    .top-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .search-bar {
+        width: 100%;
+    }
+
+    .search-bar input {
+        width: 100%;
+    }
+
+    .user-profile {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    /* 3. Kartu Statistik & Keuangan */
+    .stats-cards, 
+    .finance-overview {
+        display: grid;
+        grid-template-columns: 1fr; /* Memaksa kartu menjadi 1 kolom menyusun ke bawah */
+        gap: 15px;
+    }
+
+    /* 4. Tabel Data (Sangat Penting untuk Layar Kecil) */
+    .table-container {
+        overflow-x: auto; /* Memunculkan scrollbar horizontal khusus untuk tabel */
+        -webkit-overflow-scrolling: touch; /* Membuat scroll lebih halus di iOS */
+        width: 100%;
+        display: block;
+    }
+
+    .data-table {
+        min-width: 600px; /* Menjaga agar teks tabel tidak terlalu berhimpitan */
+    }
+
+    /* 5. Layout Formulir (Registrasi & Keuangan) */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr; /* Semua input form memanjang 100% ke bawah */
+        gap: 15px;
+    }
+
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-actions button {
+        width: 100%; /* Tombol simpan melebar penuh agar mudah ditekan di HP */
+    }
+
+    /* 6. Generator Kartu Anggota */
+    .card-generator-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .id-card {
+        width: 100%;
+        max-width: 350px;
+        margin: 0 auto;
+    }
+
+    /* 7. Halaman Login */
+    .login-box {
+        width: 90%;
+        padding: 20px;
+        margin: 20px auto;
+    }
+
+    /* 8. Tombol Melayang (Backup/Load) */
+    .floating-backup-btns {
+        bottom: 10px;
+        right: 10px;
+        transform: scale(0.85); /* Memperkecil sedikit tombol melayang agar tidak menutupi konten */
+    }
+}
