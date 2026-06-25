@@ -42,7 +42,6 @@ let finances = [];
 
 let currentUserRole = null;
 let currentEditId = null;
-let currentFinanceEditId = null;
 
 // Initialize Dashboard
 document.addEventListener("DOMContentLoaded", () => {
@@ -134,6 +133,20 @@ function initApp() {
     document.getElementById("memberForm").addEventListener("submit", handleRegistration);
     document.getElementById("financeForm").addEventListener("submit", handleFinanceSubmit);
     
+    // Setup Search - Enter key triggers search, clearing input resets table
+    const searchInput = document.getElementById("searchInput");
+    searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            performSearch();
+        }
+    });
+    searchInput.addEventListener("input", () => {
+        if (searchInput.value.trim() === "") {
+            renderTable();
+        }
+    });
+
     // Set default date for finance form
     document.getElementById("financeDate").valueAsDate = new Date();
 }
@@ -201,11 +214,18 @@ function switchPage(pageId) {
 }
 
 // Table Rendering
-function renderTable() {
+function renderTable(filteredList) {
     const tbody = document.getElementById("memberTableBody");
     tbody.innerHTML = "";
 
-    members.forEach((member, index) => {
+    const dataToRender = filteredList || members;
+
+    if (dataToRender.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--text-muted); font-style: italic;">Tidak ada data anggota yang ditemukan.</td></tr>`;
+        return;
+    }
+
+    dataToRender.forEach((member, index) => {
         const age = calculateAge(member.tanggalLahir);
         let statusBadge = "badge-success";
         if (member.status === "Pasif") statusBadge = "badge-warning";
@@ -228,6 +248,38 @@ function renderTable() {
         `;
         tbody.appendChild(tr);
     });
+}
+
+// Search / Filter Members
+function performSearch() {
+    const query = document.getElementById("searchInput").value.trim().toLowerCase();
+
+    // If empty, show all members
+    if (!query) {
+        renderTable();
+        return;
+    }
+
+    const filtered = members.filter(member => {
+        return (
+            member.namaLengkap.toLowerCase().includes(query) ||
+            member.id.toLowerCase().includes(query) ||
+            member.noHp.toLowerCase().includes(query) ||
+            member.alamat.toLowerCase().includes(query) ||
+            member.peranGbt.toLowerCase().includes(query) ||
+            member.jenisKelamin.toLowerCase().includes(query) ||
+            member.status.toLowerCase().includes(query) ||
+            (member.komisi && member.komisi.toLowerCase().includes(query))
+        );
+    });
+
+    // Switch to dashboard to show results
+    switchPage('dashboard');
+    document.querySelectorAll(".sidebar-nav li").forEach(nav => nav.classList.remove("active"));
+    const dashNav = document.querySelector("[data-target='dashboard']");
+    if (dashNav) dashNav.classList.add("active");
+
+    renderTable(filtered);
 }
 
 // Stats Update
@@ -524,10 +576,7 @@ function renderFinanceTable() {
             <td><span class="badge ${badgeClass}">${tx.type}</span></td>
             <td style="font-weight: 500;">${formatCurrency(tx.amount)}</td>
             <td>
-                ${currentUserRole === 'Admin' ? `
-                <button class="btn btn-warning" style="padding: 5px 10px; background: #fef08a; color: #854d0e; border:none; margin-right: 5px;" onclick="editFinance('${tx.id}')">Edit</button>
                 <button class="btn btn-danger" style="padding: 5px 10px; background: #fee2e2; color: #b91c1c; border:none;" onclick="deleteFinance('${tx.id}')">Hapus</button>
-                ` : ''}
             </td>
         `;
         tbody.appendChild(tr);
@@ -543,64 +592,25 @@ function renderFinanceTable() {
 function handleFinanceSubmit(e) {
     e.preventDefault();
     
-    if (currentFinanceEditId) {
-        const index = finances.findIndex(f => f.id === currentFinanceEditId);
-        if (index > -1) {
-            finances[index] = {
-                ...finances[index],
-                date: document.getElementById("financeDate").value,
-                type: document.getElementById("financeType").value,
-                category: document.getElementById("financeCategory").value,
-                amount: parseInt(document.getElementById("financeAmount").value, 10),
-                desc: document.getElementById("financeDesc").value
-            };
-        }
-        alert("Transaksi berhasil diperbarui!");
-    } else {
-        const newTx = {
-            id: "F" + Date.now().toString().slice(-6),
-            date: document.getElementById("financeDate").value,
-            type: document.getElementById("financeType").value,
-            category: document.getElementById("financeCategory").value,
-            amount: parseInt(document.getElementById("financeAmount").value, 10),
-            desc: document.getElementById("financeDesc").value
-        };
-        finances.push(newTx);
-        alert("Transaksi berhasil ditambahkan!");
-    }
+    const newTx = {
+        id: "F" + Date.now().toString().slice(-6),
+        date: document.getElementById("financeDate").value,
+        type: document.getElementById("financeType").value,
+        category: document.getElementById("financeCategory").value,
+        amount: parseInt(document.getElementById("financeAmount").value, 10),
+        desc: document.getElementById("financeDesc").value
+    };
 
+    finances.push(newTx);
     saveFinanceData();
     renderFinanceTable();
-    cancelFinanceEdit();
-}
-
-function editFinance(id) {
-    const tx = finances.find(f => f.id === id);
-    if (!tx) return;
     
-    currentFinanceEditId = id;
+    // Reset inputs except date and type
+    document.getElementById("financeCategory").value = "";
+    document.getElementById("financeAmount").value = "";
+    document.getElementById("financeDesc").value = "";
     
-    document.getElementById("financeDate").value = tx.date;
-    document.getElementById("financeType").value = tx.type;
-    document.getElementById("financeCategory").value = tx.category;
-    document.getElementById("financeAmount").value = tx.amount;
-    document.getElementById("financeDesc").value = tx.desc;
-    
-    document.getElementById("textSubmitFinance").textContent = "Perbarui Transaksi";
-    document.getElementById("btnCancelFinance").style.display = "inline-flex";
-    
-    // Scroll to form
-    document.getElementById("financeForm").scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-function cancelFinanceEdit() {
-    currentFinanceEditId = null;
-    
-    document.getElementById("financeForm").reset();
-    document.getElementById("financeDate").valueAsDate = new Date();
-    
-    document.getElementById("textSubmitFinance").textContent = "Tambah Transaksi";
-    document.getElementById("btnCancelFinance").style.display = "none";
+    alert("Transaksi berhasil ditambahkan!");
 }
 
 function deleteFinance(id) {
@@ -609,97 +619,6 @@ function deleteFinance(id) {
         saveFinanceData();
         renderFinanceTable();
     }
-}
-
-function printFinanceReport() {
-    let totalMasuk = 0;
-    let totalKeluar = 0;
-
-    const sortedFinances = [...finances].sort((a,b) => new Date(b.date) - new Date(a.date));
-
-    let tableRows = '';
-    sortedFinances.forEach((tx, index) => {
-        if (tx.type === "Masuk") totalMasuk += tx.amount;
-        else totalKeluar += tx.amount;
-
-        const d = new Date(tx.date);
-        const formattedDate = `${d.getDate().toString().padStart(2,'0')} ${d.toLocaleString('id-ID', { month: 'short' })} ${d.getFullYear()}`;
-
-        tableRows += `
-            <tr>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${index + 1}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${formattedDate}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${tx.category}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${tx.desc}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${tx.type}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${formatCurrency(tx.amount)}</td>
-            </tr>
-        `;
-    });
-
-    const saldo = totalMasuk - totalKeluar;
-
-    const printContent = `
-        <div style="text-align: center; margin-bottom: 20px;">
-            <h2>Laporan Keuangan GBT Kristus Penolong-Pasuruan</h2>
-            <p style="color: #666;">Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-            <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; flex: 1; margin: 0 10px; text-align: center; background-color: #f8fff8;">
-                <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #555;">Total Pemasukan</h3>
-                <p style="margin: 0; font-size: 18px; color: #16a34a; font-weight: bold;">${formatCurrency(totalMasuk)}</p>
-            </div>
-            <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; flex: 1; margin: 0 10px; text-align: center; background-color: #fff8f8;">
-                <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #555;">Total Pengeluaran</h3>
-                <p style="margin: 0; font-size: 18px; color: #dc2626; font-weight: bold;">${formatCurrency(totalKeluar)}</p>
-            </div>
-            <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; flex: 1; margin: 0 10px; text-align: center; background-color: #f8f9ff;">
-                <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #555;">Saldo Akhir</h3>
-                <p style="margin: 0; font-size: 18px; color: #2563eb; font-weight: bold;">${formatCurrency(saldo)}</p>
-            </div>
-        </div>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px;">
-            <thead>
-                <tr style="background-color: #f1f5f9;">
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: center;">No</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Tanggal</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Kategori</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Keterangan</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: center;">Tipe</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: right;">Jumlah</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${tableRows}
-            </tbody>
-        </table>
-    `;
-
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>Cetak Laporan Keuangan</title>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-            <style>
-                body { font-family: 'Inter', sans-serif; padding: 20px; color: #333; }
-                @media print {
-                    @page { margin: 1cm; }
-                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                }
-            </style>
-        </head>
-        <body>
-            ${printContent}
-            <script>
-                setTimeout(() => {
-                    window.print();
-                    window.close();
-                }, 500);
-            </script>
-        </body>
-        </html>
-    `);
 }
 
 // --- PHOTO UPLOAD & CAMERA SYSTEM ---
@@ -802,82 +721,77 @@ function capturePhoto() {
     closeCamera();
 }
 
-// Print Jemaat List
-function printJemaatList() {
-    let tableRows = '';
-    
-    members.forEach((member, index) => {
-        const age = calculateAge(member.tanggalLahir);
-        tableRows += `
-            <tr>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${index + 1}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${member.namaLengkap}<br><small style="color:#666;">${member.id}</small></td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${age} Thn</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${member.jenisKelamin}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${member.noHp}</td>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${member.status}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${member.peranGbt}<br><small style="color:#666;">${member.komisi}</small></td>
-            </tr>
-        `;
-    });
+// ==========================================
+// BACKUP: Simpan & Ambil Data (localStorage)
+// ==========================================
 
-    const printContent = `
-        <div style="text-align: center; margin-bottom: 20px;">
-            <h2>Daftar Anggota Jemaat GBT Kristus Penolong-Pasuruan</h2>
-            <p style="color: #666;">Tanggal Cetak: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-        </div>
-        <div style="display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 14px;">
-            <div style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #f8f9ff;">
-                <strong>Total Jemaat:</strong> ${members.length} Orang
-            </div>
-            <div style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #f8fff8;">
-                <strong>Pria:</strong> ${members.filter(m => m.jenisKelamin === "Pria").length} Orang
-            </div>
-            <div style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; background-color: #fff8f8;">
-                <strong>Wanita:</strong> ${members.filter(m => m.jenisKelamin === "Wanita").length} Orang
-            </div>
-        </div>
-        <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px;">
-            <thead>
-                <tr style="background-color: #f1f5f9;">
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: center;">No</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Nama & ID</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: center;">Usia</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: center;">L/P</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: center;">No HP</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: center;">Status</th>
-                    <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Peran & Komisi</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${tableRows}
-            </tbody>
-        </table>
-    `;
+function simpanDataBackup() {
+    try {
+        const backupData = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            backupData[key] = localStorage.getItem(key);
+        }
 
-    const printWindow = window.open('', '', 'width=800,height=600');
-    printWindow.document.write(`
-        <html>
-        <head>
-            <title>Cetak Daftar Jemaat</title>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-            <style>
-                body { font-family: 'Inter', sans-serif; padding: 20px; color: #333; }
-                @media print {
-                    @page { margin: 1cm; size: landscape; }
-                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        const jsonString = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "local_storage_backup.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        alert("✅ Data berhasil disimpan ke file local_storage_backup.json!");
+    } catch (err) {
+        alert("❌ Gagal menyimpan data: " + err.message);
+    }
+}
+
+function ambilDataBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".json")) {
+        alert("❌ File harus berformat .json!");
+        event.target.value = "";
+        return;
+    }
+
+    const confirmLoad = confirm(
+        "⚠️ Data yang ada saat ini akan ditimpa dengan data dari file backup.\n\nLanjutkan?"
+    );
+    if (!confirmLoad) {
+        event.target.value = "";
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            const backupData = JSON.parse(e.target.result);
+
+            // Restore all keys to localStorage
+            for (const key in backupData) {
+                if (backupData.hasOwnProperty(key)) {
+                    localStorage.setItem(key, backupData[key]);
                 }
-            </style>
-        </head>
-        <body>
-            ${printContent}
-            <script>
-                setTimeout(() => {
-                    window.print();
-                    window.close();
-                }, 500);
-            </script>
-        </body>
-        </html>
-    `);
+            }
+
+            alert("✅ Data berhasil dimuat dari file backup! Halaman akan di-refresh.");
+            window.location.reload();
+        } catch (err) {
+            alert("❌ File tidak valid atau rusak: " + err.message);
+        }
+    };
+
+    reader.onerror = function () {
+        alert("❌ Gagal membaca file.");
+    };
+
+    reader.readAsText(file);
+    event.target.value = "";
 }
