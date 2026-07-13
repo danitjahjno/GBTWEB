@@ -88,9 +88,14 @@
                             <h1>Daftar Anggota Jemaat</h1>
                             <p>Overview data seluruh anggota gereja yang terdaftar.</p>
                         </div>
-                        <button class="btn btn-primary" onclick="switchPage('registration')">
-                            <ion-icon name="add"></ion-icon> Tambah Anggota
-                        </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary" onclick="printMemberTable()">
+                                <ion-icon name="print-outline"></ion-icon> Print
+                            </button>
+                            <button class="btn btn-primary" onclick="switchPage('registration')">
+                                <ion-icon name="add"></ion-icon> Tambah Anggota
+                            </button>
+                        </div>
                     </div>
 
                     <div class="stats-cards">
@@ -261,32 +266,56 @@
                         </div>
 
                         <div class="card-preview">
-                            <div class="id-card" id="idCardElement">
-                                <div class="id-card-header">
-                                    <img src="logo.png" alt="Logo" class="small-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="logo-small fallback-logo-small" style="display: none;"><ion-icon name="home"></ion-icon></div>
-                                    <div>
-                                        <h4>GBT Kristus Penolong-Pasuruan</h4>
-                                        <span>Kartu Tanda Anggota Jemaat</span>
-                                    </div>
-                                </div>
-                                <div class="id-card-body">
-                                    <div class="id-photo">
-                                        <img src="https://via.placeholder.com/100" alt="Member Photo" id="cardFoto">
-                                    </div>
-                                    <div class="id-details">
-                                        <p class="id-name" id="cardNama">NAMA LENGKAP</p>
-                                        <p class="id-no" id="cardNo">No: -</p>
-                                        <hr>
-                                        <div class="id-info-grid">
-                                            <span>TTL:</span> <span id="cardTtl">-</span>
-                                            <span>Posisi:</span> <span id="cardPosisi">-</span>
-                                            <span>Komisi:</span> <span id="cardKomisi">-</span>
+                            <!-- KARTU DEPAN -->
+                            <div class="card-flip-wrapper">
+                                <p class="card-label">Depan</p>
+                                <div class="id-card id-card-vertical" id="idCardElement">
+                                    <div class="id-card-header">
+                                        <img src="logo.png" alt="Logo" class="small-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="logo-small fallback-logo-small" style="display: none;"><ion-icon name="home"></ion-icon></div>
+                                        <div>
+                                            <h4>GBT Kristus Penolong-Pasuruan</h4>
+                                            <span>Kartu Tanda Anggota Jemaat</span>
                                         </div>
                                     </div>
+                                    <div class="id-card-body-vertical">
+                                        <div class="id-photo-vertical">
+                                            <img src="https://via.placeholder.com/120" alt="Member Photo" id="cardFoto">
+                                        </div>
+                                        <div class="id-details-vertical">
+                                            <p class="id-name" id="cardNama">NAMA LENGKAP</p>
+                                            <hr>
+                                            <div class="id-info-grid">
+                                                <span>Posisi:</span> <span id="cardPosisi">-</span>
+                                                <span>Komisi:</span> <span id="cardKomisi">-</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="id-card-footer">
+                                        <p>Sembahlan Tuhan Berilah KasihMu kepada Sesama</p>
+                                    </div>
                                 </div>
-                                <div class="id-card-footer">
-                                    <p>Sembahlan Tuhan Berilah KasihMu kepada Sesama</p>
+                            </div>
+
+                            <!-- KARTU BELAKANG -->
+                            <div class="card-flip-wrapper">
+                                <p class="card-label">Belakang</p>
+                                <div class="id-card id-card-vertical id-card-back" id="idCardBackElement">
+                                    <div class="id-card-back-content">
+                                        <img src="logo.png" alt="Logo" class="back-logo" onerror="this.style.display='none';">
+                                        <h3>GBT Kristus Penolong</h3>
+                                        <h4>Pasuruan</h4>
+                                        <hr>
+                                        <div class="back-address">
+                                            <ion-icon name="location-outline"></ion-icon>
+                                            <p>Jl. Anjasmoro III No. 16,<br>Kota Pasuruan, Jawa Timur</p>
+                                        </div>
+                                        <hr>
+                                        <p class="back-motto">Melayani Tuhan dengan Setia</p>
+                                    </div>
+                                    <div class="id-card-footer">
+                                        <p>&copy; 2026 GBT Kristus Penolong-Pasuruan</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -296,8 +325,13 @@
                 <!-- Financial Report -->
                 <section id="finance" class="page">
                     <div class="page-header">
-                        <h1>Laporan Keuangan</h1>
-                        <p>Ringkasan Pemasukan dan Pengeluaran Gereja.</p>
+                        <div>
+                            <h1>Laporan Keuangan</h1>
+                            <p>Ringkasan Pemasukan dan Pengeluaran Gereja.</p>
+                        </div>
+                        <button class="btn btn-secondary" onclick="printFinanceReport()">
+                            <ion-icon name="print-outline"></ion-icon> Print Laporan
+                        </button>
                     </div>
 
                     <div class="finance-overview fade-in" id="financeCards">
