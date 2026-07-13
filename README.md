@@ -1,5 +1,4 @@
 # GBT Kristus Penolong-Pasuruan - Church Member Web App
-
 Welcome to the Church Member Application documentation. This application is designed to be an interactive, modern, and aesthetic solution for managing the church congregation for GBT Kristus Penolong-Pasuruan.
 
 ## Features Included
@@ -26,3 +25,4 @@ You do not need to install complex dependencies.
 ## Design Decisions
 - **Color Palette**: Uses professional Deep Blue (`#1e293b`), accented by bright Blue (`#3b82f6`) and Gold (`#f59e0b`) to give a majestic, religious organization feel while staying modern.
 - **Dynamic Content**: Interactions feel instantaneous. Navigation does not reload the page, offering a Single Page App (SPA) experience without needing React/Vue.
+
