@@ -153,7 +153,19 @@ function initApp() {
 
 function loadData() {
     const storedMembers = localStorage.getItem("gbt_members");
-    if (storedMembers) members = JSON.parse(storedMembers);
+    if (storedMembers) {
+        members = JSON.parse(storedMembers);
+        let idSet = new Set();
+        let changed = false;
+        members.forEach(m => {
+            if (idSet.has(m.id)) {
+                m.id = "M" + Date.now().toString() + Math.floor(Math.random() * 1000);
+                changed = true;
+            }
+            idSet.add(m.id);
+        });
+        if (changed) saveData();
+    }
     else { members = [...defaultMembers]; saveData(); }
 
     const storedFinances = localStorage.getItem("gbt_finances");
@@ -163,10 +175,12 @@ function loadData() {
 
 function saveData() {
     localStorage.setItem("gbt_members", JSON.stringify(members));
+    syncToGitHub();
 }
 
 function saveFinanceData() {
     localStorage.setItem("gbt_finances", JSON.stringify(finances));
+    syncToGitHub();
 }
 
 function calculateAge(dob) {
@@ -235,7 +249,7 @@ function renderTable(filteredList) {
         tr.innerHTML = `
             <td>${index + 1}</td>
             <td><img src="${member.foto || 'https://via.placeholder.com/150'}" class="table-photo" alt="foto"></td>
-            <td><strong>${member.namaLengkap}</strong><br><small>${member.id}</small></td>
+            <td><strong>${member.namaLengkap}</strong></td>
             <td>${age} Thn</td>
             <td>${member.jenisKelamin}</td>
             <td>${member.noHp}</td>
@@ -325,7 +339,7 @@ function handleRegistration(e) {
         alert("Data anggota berhasil diperbarui!");
     } else {
         const newMember = {
-            id: "M" + Math.floor(Math.random() * 1000).toString().padStart(3, '0'),
+            id: "M" + Date.now().toString(),
             namaLengkap: document.getElementById("namaLengkap").value,
             tanggalLahir: document.getElementById("tanggalLahir").value,
             jenisKelamin: document.getElementById("jenisKelamin").value,
@@ -429,8 +443,7 @@ function viewMember(id) {
         <div style="display:flex; gap: 20px; align-items: start;">
             <img src="${member.foto}" style="width:120px; border-radius: 8px;">
             <div>
-                <h3>${member.namaLengkap}</h3>
-                <p style="color:var(--text-muted); margin-bottom: 15px;">ID: ${member.id}</p>
+                <h2 style="margin: 0; color:var(--text-dark);">${member.namaLengkap}</h2>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
                     <p><strong>Total Keluarga:</strong> ${member.totalKeluarga} Orang</p>
                     <p><strong>Usia:</strong> ${age} Tahun</p>
@@ -463,7 +476,7 @@ function populateCardSelect() {
     members.forEach(m => {
         const opt = document.createElement("option");
         opt.value = m.id;
-        opt.textContent = `${m.namaLengkap} (${m.id})`;
+        opt.textContent = m.namaLengkap;
         select.appendChild(opt);
     });
 
@@ -474,14 +487,12 @@ function populateCardSelect() {
         }
         const member = members.find(m => m.id === e.target.value);
         if (member) {
-            document.getElementById("cardNama").textContent = member.namaLengkap;
-            document.getElementById("cardNo").textContent = "No: " + member.id;
+            document.getElementById("cardNama").textContent = member.namaLengkap.toUpperCase();
             document.getElementById("cardFoto").src = member.foto;
 
-            // Format TTL
-            const d = new Date(member.tanggalLahir);
-            const formattedDate = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
-            document.getElementById("cardTtl").textContent = formattedDate;
+            // Format TTL (Dihapus dari tampilan sesuai permintaan)
+            // const d = new Date(member.tanggalLahir);
+            // const formattedDate = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
 
             document.getElementById("cardPosisi").textContent = member.peranGbt;
             document.getElementById("cardKomisi").textContent = member.komisi;
@@ -490,7 +501,7 @@ function populateCardSelect() {
             if (member.peranGbt === "Jemaat" || member.peranGbt === "Jemaat Umum") {
                 cardObj.style.backgroundColor = "lightgreen";
             } else if (member.peranGbt === "Pengurus") {
-                cardObj.style.backgroundColor = "yellow";
+                cardObj.style.backgroundColor = "lightblue";
             } else if (member.peranGbt === "Majelis") {
                 cardObj.style.backgroundColor = "silver";
             } else if (member.peranGbt === "Pendeta" || member.peranGbt === "Hamba Tuhan") {
@@ -504,9 +515,7 @@ function populateCardSelect() {
 
 function clearCard() {
     document.getElementById("cardNama").textContent = "NAMA LENGKAP";
-    document.getElementById("cardNo").textContent = "No: -";
     document.getElementById("cardFoto").src = "https://via.placeholder.com/100";
-    document.getElementById("cardTtl").textContent = "-";
     document.getElementById("cardPosisi").textContent = "-";
     document.getElementById("cardKomisi").textContent = "-";
     document.getElementById("idCardElement").style.backgroundColor = "white";
@@ -540,6 +549,218 @@ function printCard() {
                     window.close();
                 }, 500);
             </script>
+        </body>
+        </html>
+    `);
+}
+
+// Print Member Table
+function printMemberTable() {
+    if (members.length === 0) {
+        alert("Tidak ada data anggota untuk dicetak!");
+        return;
+    }
+
+    const totalPria = members.filter(m => m.jenisKelamin === "Pria").length;
+    const totalWanita = members.filter(m => m.jenisKelamin === "Wanita").length;
+
+    let tableRows = "";
+    members.forEach((member, index) => {
+        const age = calculateAge(member.tanggalLahir);
+        tableRows += `
+            <tr>
+                <td style="text-align:center;">${index + 1}</td>
+                <td><strong>${member.namaLengkap}</strong></td>
+                <td style="text-align:center;">${age} Thn</td>
+                <td style="text-align:center;">${member.jenisKelamin}</td>
+                <td>${member.noHp}</td>
+                <td>${member.alamat}</td>
+                <td style="text-align:center;">${member.peranGbt}</td>
+                <td>${member.komisi || '-'}</td>
+                <td style="text-align:center;">${member.status}</td>
+            </tr>
+        `;
+    });
+
+    const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    const printWindow = window.open('', '', 'width=1000,height=700');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Daftar Anggota Jemaat - GBT Kristus Penolong-Pasuruan</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #333; }
+                .print-header { text-align: center; margin-bottom: 25px; border-bottom: 3px solid #1e3a5f; padding-bottom: 15px; }
+                .print-header h1 { font-size: 18px; color: #1e3a5f; margin-bottom: 3px; }
+                .print-header h2 { font-size: 14px; color: #555; font-weight: normal; }
+                .print-header p.date { font-size: 11px; color: #999; margin-top: 5px; }
+                .stats-row { display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
+                .stats-row .stat { background: #f0f4f8; padding: 8px 20px; border-radius: 6px; text-align: center; }
+                .stats-row .stat h4 { font-size: 11px; color: #666; text-transform: uppercase; }
+                .stats-row .stat p { font-size: 18px; font-weight: 700; color: #1e3a5f; }
+                table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                thead th { background: #1e3a5f; color: white; padding: 8px 6px; text-align: left; font-size: 10px; text-transform: uppercase; }
+                tbody td { padding: 7px 6px; border-bottom: 1px solid #e2e8f0; }
+                tbody tr:nth-child(even) { background: #f8fafc; }
+                .footer { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 10px; color: #999; }
+                @media print { body { padding: 15px; } }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <h1>GBT Kristus Penolong-Pasuruan</h1>
+                <h2>Daftar Anggota Jemaat</h2>
+                <p class="date">Dicetak pada: ${today}</p>
+            </div>
+            <div class="stats-row">
+                <div class="stat"><h4>Total Jemaat</h4><p>${members.length}</p></div>
+                <div class="stat"><h4>Pria</h4><p>${totalPria}</p></div>
+                <div class="stat"><h4>Wanita</h4><p>${totalWanita}</p></div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Nama Lengkap</th>
+                        <th>Usia</th>
+                        <th>L/P</th>
+                        <th>No HP</th>
+                        <th>Alamat</th>
+                        <th>Posisi</th>
+                        <th>Komisi</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+            <div class="footer">
+                <p>&copy; ${new Date().getFullYear()} GBT Kristus Penolong-Pasuruan &mdash; Sistem Data Jemaat</p>
+            </div>
+            <script>
+                setTimeout(() => { window.print(); window.close(); }, 500);
+            <\/script>
+        </body>
+        </html>
+    `);
+}
+
+// Print Finance Report
+function printFinanceReport() {
+    if (finances.length === 0) {
+        alert("Tidak ada data keuangan untuk dicetak!");
+        return;
+    }
+
+    let totalMasuk = 0;
+    let totalKeluar = 0;
+
+    const sortedFinances = [...finances].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    let tableRows = "";
+    sortedFinances.forEach((tx, index) => {
+        if (tx.type === "Masuk") totalMasuk += tx.amount;
+        else totalKeluar += tx.amount;
+
+        const d = new Date(tx.date);
+        const formattedDate = `${d.getDate().toString().padStart(2,'0')} ${d.toLocaleString('id-ID', { month: 'short' })} ${d.getFullYear()}`;
+
+        tableRows += `
+            <tr>
+                <td style="text-align:center;">${index + 1}</td>
+                <td>${formattedDate}</td>
+                <td><strong>${tx.category}</strong></td>
+                <td>${tx.desc}</td>
+                <td style="text-align:center;">
+                    <span style="padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;
+                        background: ${tx.type === 'Masuk' ? '#d1fae5' : '#fee2e2'};
+                        color: ${tx.type === 'Masuk' ? '#065f46' : '#b91c1c'};">
+                        ${tx.type}
+                    </span>
+                </td>
+                <td style="text-align:right; font-weight: 500;">${formatCurrency(tx.amount)}</td>
+            </tr>
+        `;
+    });
+
+    const saldo = totalMasuk - totalKeluar;
+    const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    const printWindow = window.open('', '', 'width=900,height=700');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Laporan Keuangan - GBT Kristus Penolong-Pasuruan</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #333; }
+                .print-header { text-align: center; margin-bottom: 25px; border-bottom: 3px solid #1e3a5f; padding-bottom: 15px; }
+                .print-header h1 { font-size: 18px; color: #1e3a5f; margin-bottom: 3px; }
+                .print-header h2 { font-size: 14px; color: #555; font-weight: normal; }
+                .print-header p.date { font-size: 11px; color: #999; margin-top: 5px; }
+                .finance-summary { display: flex; justify-content: center; gap: 20px; margin-bottom: 25px; }
+                .finance-summary .card { padding: 12px 25px; border-radius: 8px; text-align: center; min-width: 180px; }
+                .finance-summary .card h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+                .finance-summary .card p { font-size: 16px; font-weight: 700; }
+                .card-income { background: #d1fae5; color: #065f46; }
+                .card-income p { color: #065f46; }
+                .card-expense { background: #fee2e2; color: #b91c1c; }
+                .card-expense p { color: #b91c1c; }
+                .card-balance { background: #dbeafe; color: #1e40af; }
+                .card-balance p { color: #1e40af; }
+                table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+                thead th { background: #1e3a5f; color: white; padding: 8px 6px; text-align: left; font-size: 10px; text-transform: uppercase; }
+                tbody td { padding: 7px 6px; border-bottom: 1px solid #e2e8f0; }
+                tbody tr:nth-child(even) { background: #f8fafc; }
+                .footer { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 10px; color: #999; }
+                @media print { body { padding: 15px; } }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <h1>GBT Kristus Penolong-Pasuruan</h1>
+                <h2>Laporan Keuangan Gereja</h2>
+                <p class="date">Dicetak pada: ${today}</p>
+            </div>
+            <div class="finance-summary">
+                <div class="card card-income">
+                    <h4>Total Pemasukan</h4>
+                    <p>${formatCurrency(totalMasuk)}</p>
+                </div>
+                <div class="card card-expense">
+                    <h4>Total Pengeluaran</h4>
+                    <p>${formatCurrency(totalKeluar)}</p>
+                </div>
+                <div class="card card-balance">
+                    <h4>Saldo Kas</h4>
+                    <p>${formatCurrency(saldo)}</p>
+                </div>
+            </div>
+            <h3 style="font-size: 13px; margin-bottom: 10px; color: #1e3a5f;">Riwayat Transaksi</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Kategori</th>
+                        <th>Keterangan</th>
+                        <th>Tipe</th>
+                        <th style="text-align:right;">Jumlah (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+            <div class="footer">
+                <p>&copy; ${new Date().getFullYear()} GBT Kristus Penolong-Pasuruan &mdash; Sistem Data Jemaat</p>
+            </div>
+            <script>
+                setTimeout(() => { window.print(); window.close(); }, 500);
+            <\/script>
         </body>
         </html>
     `);
@@ -794,4 +1015,85 @@ function ambilDataBackup(event) {
 
     reader.readAsText(file);
     event.target.value = "";
+}
+
+// ==========================================
+// GITHUB AUTO-SYNC
+// ==========================================
+async function syncToGitHub() {
+    let token = localStorage.getItem("github_pat");
+    if (!token || token !== "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") {
+        token = "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";
+        localStorage.setItem("github_pat", token);
+    }
+
+    const repoOwner = "danitjahjno";
+    const repoName = "GBTWEB";
+    const filePath = "local_storage_backup.json";
+    const url = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
+
+    try {
+        // 1. Dapatkan semua data dari localStorage
+        const backupData = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key !== "github_pat") { // Jangan upload token!
+                backupData[key] = localStorage.getItem(key);
+            }
+        }
+        const jsonString = JSON.stringify(backupData, null, 2);
+        
+        // Convert to Base64 (supporting Unicode)
+        const encodedContent = btoa(unescape(encodeURIComponent(jsonString)));
+
+        // 2. Cek apakah file sudah ada di GitHub untuk mendapatkan SHA
+        let sha = null;
+        const getRes = await fetch(url, {
+            method: "GET",
+            headers: {
+                "Authorization": `token ${token}`,
+                "Accept": "application/vnd.github.v3+json"
+            }
+        });
+
+        if (getRes.ok) {
+            const getData = await getRes.json();
+            sha = getData.sha;
+        } else if (getRes.status === 401) {
+            alert("Token GitHub tidak valid atau kedaluwarsa. Token akan dihapus dari sistem.");
+            localStorage.removeItem("github_pat");
+            return;
+        } else if (getRes.status !== 404) {
+             console.error("Gagal mengambil data dari GitHub:", getRes.statusText);
+             return;
+        }
+
+        // 3. Update file di GitHub
+        const putRes = await fetch(url, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${token}`,
+                "Accept": "application/vnd.github.v3+json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                message: `Auto-save backup ${new Date().toISOString()}`,
+                content: encodedContent,
+                sha: sha // Diperlukan jika file sudah ada
+            })
+        });
+
+        if (putRes.ok) {
+            console.log("✅ Auto-save ke GitHub berhasil!");
+        } else {
+            const errData = await putRes.json();
+            console.error("❌ Auto-save ke GitHub gagal:", errData);
+            if (putRes.status === 401 || putRes.status === 403) {
+                 alert("Izin GitHub ditolak. Pastikan token memiliki hak akses 'repo'.");
+            }
+        }
+
+    } catch (err) {
+        console.error("Kesalahan jaringan saat sync ke GitHub:", err);
+    }
 }
