@@ -255,9 +255,11 @@ function renderTable(filteredList) {
             <td>${member.noHp}</td>
             <td><span class="badge ${statusBadge}">${member.status}</span></td>
             <td>
-                <button class="btn btn-secondary" style="padding: 5px 10px" onclick="viewMember('${member.id}')">Detail</button>
-                ${currentUserRole === 'Admin' ? `<button class="btn btn-warning" style="padding: 5px 10px; background: #fef08a; color: #854d0e; border:none; margin-left: 5px;" onclick="editMember('${member.id}')">Edit</button>
-                <button class="btn btn-danger" style="padding: 5px 10px; background: #fee2e2; color: #b91c1c; border:none; margin-left: 5px;" onclick="deleteMember('${member.id}')">Hapus</button>` : ''}
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="viewMember('${member.id}')">Detail</button>
+                    ${currentUserRole === 'Admin' ? `<button class="btn btn-warning" onclick="editMember('${member.id}')">Edit</button>
+                    <button class="btn btn-danger" onclick="deleteMember('${member.id}')">Hapus</button>` : ''}
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
@@ -797,7 +799,9 @@ function renderFinanceTable() {
             <td><span class="badge ${badgeClass}">${tx.type}</span></td>
             <td style="font-weight: 500;">${formatCurrency(tx.amount)}</td>
             <td>
-                <button class="btn btn-danger" style="padding: 5px 10px; background: #fee2e2; color: #b91c1c; border:none;" onclick="deleteFinance('${tx.id}')">Hapus</button>
+                <div class="action-buttons">
+                    <button class="btn btn-danger" onclick="deleteFinance('${tx.id}')">Hapus</button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
@@ -1022,8 +1026,8 @@ function ambilDataBackup(event) {
 // ==========================================
 async function syncToGitHub() {
     let token = localStorage.getItem("github_pat");
-    if (!token || token !== "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") {
-        token = "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";
+    if (!token || token !== "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") {
+        token = "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";
         localStorage.setItem("github_pat", token);
     }
 
