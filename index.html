@@ -3,24 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Data Jemaat - GBT Kristus Penolong-Pasuruan</title>
-    <meta name="description" content="Aplikasi Pendataan Anggota Gereja GBT Kristus Penolong-Pasuruan">
+    <title>Sistem Data Jemaat - Jemaat Bersatu-Pasuruan</title>
+    <meta name="description" content="Aplikasi Pendataan Anggota Jemaat Bersatu-Pasuruan">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+<style id="mobile-member-actions">
+.member-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.member-action-btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 9px 12px;
+    min-width: 72px;
+    min-height: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    touch-action: manipulation;
+}
+.member-action-edit { background: #e8f0fe; color: #1a56db; }
+.member-action-delete { background: #fdecec; color: #c62828; }
+
+@media (max-width: 768px) {
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .data-table {
+        min-width: 760px;
+    }
+    .member-actions {
+        flex-direction: column;
+        gap: 6px;
+    }
+    .member-action-btn {
+        width: 100%;
+        min-width: 82px;
+        min-height: 44px;
+        font-size: 14px;
+    }
+}
+</style>
+
 </head>
 <body>
     <div id="login-container" class="login-container">
         <div class="login-box">
             <div style="text-align: center; margin-bottom: 30px;">
-                <img src="logo.png" alt="Logo GBT" style="width: 80px; height: 80px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <img src="logo.png" alt="Logo JB" style="width: 80px; height: 80px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <div class="logo-circle fallback-logo" style="display: none; margin: 0 auto; width: 80px; height: 80px; font-size: 40px;">
                     <ion-icon name="home"></ion-icon>
                 </div>
                 <h2 style="margin-top: 15px; color: var(--sidebar-bg);">Akses Sistem</h2>
                 <p style="color: var(--text-muted); font-size: 14px;">Silakan login untuk melanjutkan</p>
-                <p style="color: var(--text-muted); font-size: 11px; margin-top: 5px;">(Password Admin: RahasiaGBT | User/Tamu: sama dengan nama role)</p>
             </div>
             <form id="loginForm">
                 <div class="form-group" style="margin-bottom: 20px;">
@@ -46,11 +92,11 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <img src="logo.png" alt="Logo GBT" class="main-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <img src="logo.png" alt="Logo JB" class="main-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <div class="logo-circle fallback-logo" style="display: none;">
                     <ion-icon name="home"></ion-icon>
                 </div>
-                <h2>GBT Kristus Penolong<br><small>Pasuruan</small></h2>
+                <h2>Jemaat Bersatu<br><small>Pasuruan</small></h2>
             </div>
             <nav class="sidebar-nav">
                 <ul>
@@ -61,7 +107,7 @@
                 </ul>
             </nav>
             <div class="sidebar-footer">
-                <p>&copy; 2026 GBT Kristus Penolong-Pasuruan</p>
+                <p>&copy; 2026 Jemaat Bersatu-Pasuruan</p>
             </div>
         </aside>
 
@@ -75,7 +121,7 @@
                 </div>
                 <div class="user-profile">
                     <div class="avatar"><ion-icon name="person"></ion-icon></div>
-                    <span id="currentUserLabel">Admin GBT</span>
+                    <span id="currentUserLabel">Admin JB</span>
                     <button id="logoutBtn" class="btn btn-secondary" style="margin-left: 10px; padding: 6px 12px; font-size: 12px;"><ion-icon name="log-out-outline"></ion-icon> Logout</button>
                 </div>
             </header>
@@ -133,7 +179,7 @@
                                     <th>Pria/Wanita</th>
                                     <th>No HP</th>
                                     <th>Status</th>
-                                    <th>Aksi</th>
+                                    <th style="min-width: 180px; text-align:center;">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="memberTableBody">
@@ -182,7 +228,7 @@
                                     <input type="tel" id="noHp" required placeholder="08...">
                                 </div>
                                 <div class="form-group">
-                                    <label>Di GBT Sebagai</label>
+                                    <label>Di Jemaat Bersatu Sebagai</label>
                                     <select id="peranGbt" required>
                                         <option value="Jemaat">Jemaat Umum</option>
                                         <option value="Pengurus">Pengurus</option>
@@ -199,7 +245,7 @@
                                         <option value="Kaum Pria">Kaum Pria</option>
                                         <option value="Kaum Wanita">Kaum Wanita</option>
                                         <option value="Pujian Penyembahan">Pujian & Penyembahan</option>
-                                        <option value="Komsel">Komsel</option>
+                                        <option value="Komisi Keluarga">Komisi Keluarga</option>
                                         <option value="Komisi Sosial">Komisi Sosial</option>
                                         <option value="Komisi Pemerhati">Komisi Pemerhati</option>
                                         <option value="Komisi Doa">Komisi Doa</option>
@@ -274,7 +320,7 @@
                                         <img src="logo.png" alt="Logo" class="small-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                         <div class="logo-small fallback-logo-small" style="display: none;"><ion-icon name="home"></ion-icon></div>
                                         <div>
-                                            <h4>GBT Kristus Penolong-Pasuruan</h4>
+                                            <h4>Jemaat Bersatu-Pasuruan</h4>
                                             <span>Kartu Tanda Anggota Jemaat</span>
                                         </div>
                                     </div>
@@ -303,18 +349,18 @@
                                 <div class="id-card id-card-vertical id-card-back" id="idCardBackElement">
                                     <div class="id-card-back-content">
                                         <img src="logo.png" alt="Logo" class="back-logo" onerror="this.style.display='none';">
-                                        <h3>GBT Kristus Penolong</h3>
+                                        <h3>Jemaat Bersatu</h3>
                                         <h4>Pasuruan</h4>
                                         <hr>
                                         <div class="back-address">
                                             <ion-icon name="location-outline"></ion-icon>
-                                            <p>Jl. Anjasmoro III No. 16,<br>Kota Pasuruan, Jawa Timur</p>
+                                            <p>Jl. Jend. A. Yani No.49-51, Gadingrejo, Kec. Gadingrejo, Kota Pasuruan, Jawa Timur 67134</p>
                                         </div>
                                         <hr>
-                                        <p class="back-motto">Melayani Tuhan dengan Setia</p>
+                                        <p class="back-motto">MELAYANI TUHAN DENGAN SETIA</p>
                                     </div>
                                     <div class="id-card-footer">
-                                        <p>&copy; 2026 GBT Kristus Penolong-Pasuruan</p>
+                                        <p>&copy; 2026 Jemaat Bersatu-Pasuruan</p>
                                     </div>
                                 </div>
                             </div>
@@ -446,6 +492,181 @@
         <input type="file" id="backupFileInput" accept=".json" style="display:none;" onchange="ambilDataBackup(event)">
     </div>
 
-    <script src="script.js"></script>
+    
+<script id="member-action-functions">
+function editMember(id) {
+    // Mendukung beberapa kemungkinan struktur data yang sudah dipakai script.js.
+    const collections = [
+        window.members,
+        window.jemaatData,
+        window.memberData,
+        window.dataJemaat,
+        window.anggotaData
+    ].filter(Array.isArray);
+
+    let member = null;
+    for (const list of collections) {
+        member = list.find(x => String(x.id ?? x.ID ?? x.uid ?? '') === String(id));
+        if (member) break;
+    }
+
+    if (!member) {
+        // Fallback: cari berdasarkan data-id pada baris tabel.
+        const row = document.querySelector('#memberTableBody tr[data-member-id="' + CSS.escape(String(id)) + '"]');
+        if (row) {
+            const editBtn = row.querySelector('[data-action="edit"]');
+            if (editBtn && typeof window.editAnggota === 'function') return window.editAnggota(id);
+        }
+        alert('Data anggota tidak ditemukan.');
+        return;
+    }
+
+    // Jika script.js sudah menyediakan fungsi edit, gunakan fungsi tersebut.
+    const candidates = ['editAnggota', 'editMemberData', 'editDataAnggota', 'showEditMember'];
+    for (const fn of candidates) {
+        if (typeof window[fn] === 'function' && window[fn] !== editMember) {
+            return window[fn](id, member);
+        }
+    }
+
+    // Fallback: isi form registrasi dengan data yang tersedia.
+    const setVal = (id, value) => {
+        const el = document.getElementById(id);
+        if (el && value !== undefined && value !== null) el.value = value;
+    };
+    setVal('namaLengkap', member.namaLengkap ?? member.nama ?? member.name);
+    setVal('tanggalLahir', member.tanggalLahir ?? member.tglLahir);
+    setVal('jenisKelamin', member.jenisKelamin ?? member.gender);
+    setVal('totalKeluarga', member.totalKeluarga ?? member.jumlahKeluarga ?? 1);
+    setVal('alamat', member.alamat);
+    setVal('noHp', member.noHp ?? member.telepon ?? member.phone);
+    setVal('peranGbt', member.peranGbt ?? member.peran ?? member.role);
+    setVal('status', member.status);
+
+    const komisi = document.getElementById('komisi');
+    if (komisi && member.komisi) {
+        const vals = Array.isArray(member.komisi) ? member.komisi : String(member.komisi).split(',').map(s => s.trim());
+        [...komisi.options].forEach(o => o.selected = vals.includes(o.value));
+    }
+
+    const title = document.getElementById('regPageTitle');
+    const desc = document.getElementById('regPageDesc');
+    const submit = document.getElementById('btnSubmitMember');
+    if (title) title.textContent = 'Edit Data Anggota';
+    if (desc) desc.textContent = 'Perbarui data anggota yang dipilih.';
+    if (submit) submit.textContent = 'Simpan Perubahan';
+
+    window.currentEditingMemberId = id;
+    if (typeof window.switchPage === 'function') window.switchPage('registration');
+}
+
+function deleteMember(id) {
+    if (!confirm('Yakin ingin menghapus data anggota ini? Data yang dihapus tidak dapat dikembalikan.')) return;
+
+    const candidates = ['hapusAnggota', 'deleteAnggota', 'deleteMemberData', 'hapusDataAnggota'];
+    for (const fn of candidates) {
+        if (typeof window[fn] === 'function') {
+            window[fn](id);
+            return;
+        }
+    }
+
+    // Fallback untuk array lokal yang umum.
+    const keys = ['members', 'jemaatData', 'memberData', 'dataJemaat', 'anggotaData'];
+    for (const key of keys) {
+        if (Array.isArray(window[key])) {
+            const idx = window[key].findIndex(x => String(x.id ?? x.ID ?? x.uid ?? '') === String(id));
+            if (idx !== -1) {
+                window[key].splice(idx, 1);
+                try { localStorage.setItem(key, JSON.stringify(window[key])); } catch(e) {}
+                if (typeof window.renderMembers === 'function') window.renderMembers();
+                if (typeof window.renderMemberTable === 'function') window.renderMemberTable();
+                alert('Data anggota berhasil dihapus.');
+                return;
+            }
+        }
+    }
+
+    alert('Fungsi hapus pada script aplikasi belum ditemukan.');
+}
+
+// Memasang tombol Edit/Hapus ke setiap baris anggota setelah tabel dirender.
+(function installMemberActionObserver() {
+    function enhance() {
+        const body = document.getElementById('memberTableBody');
+        if (!body) return;
+
+        [...body.querySelectorAll('tr')].forEach((row, index) => {
+            if (row.querySelector('.member-actions')) return;
+
+            // Ambil ID dari atribut yang mungkin sudah disediakan oleh script.
+            let id = row.dataset.memberId || row.dataset.id ||
+                     row.getAttribute('data-member-id') || row.getAttribute('data-id');
+
+            const existingAction = row.querySelector('td:last-child');
+            if (!existingAction) return;
+
+            if (!id) {
+                const existingBtn = existingAction.querySelector('[onclick]');
+                const m = existingBtn?.getAttribute('onclick')?.match(/(?:edit|hapus|delete|remove)[A-Za-z]*\s*\(\s*['"]?([^'")]+)['"]?\s*\)/i);
+                if (m) id = m[1];
+            }
+
+            if (!id) return;
+
+            existingAction.innerHTML = `
+                <div class="member-actions">
+                    <button type="button" class="member-action-btn member-action-edit"
+                        data-action="edit" title="Edit data anggota"
+                        onclick="editMember(${JSON.stringify(String(id))})">
+                        <ion-icon name="create-outline"></ion-icon> Edit
+                    </button>
+                    <button type="button" class="member-action-btn member-action-delete"
+                        data-action="delete" title="Hapus data anggota"
+                        onclick="deleteMember(${JSON.stringify(String(id))})">
+                        <ion-icon name="trash-outline"></ion-icon> Hapus
+                    </button>
+                </div>`;
+        });
+    }
+
+    const start = () => {
+        enhance();
+        const body = document.getElementById('memberTableBody');
+        if (body) new MutationObserver(enhance).observe(body, {childList:true, subtree:true});
+    };
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+    else start();
+})();
+</script>
+
+<script src="script.js"></script>
+    <script>
+        // Login override: password Admin baru = JBPAS2026
+        // User/Tamu tetap menggunakan nama role sebagai password.
+        function setupLogin() {
+            const loginForm = document.getElementById("loginForm");
+            if (loginForm) {
+                loginForm.addEventListener("submit", (e) => {
+                    e.preventDefault();
+                    const role = document.getElementById("loginRole").value;
+                    const pass = document.getElementById("loginPassword").value;
+                    let isValid = false;
+                    if (role === "Admin") {
+                        isValid = (pass === "JBPAS2026");
+                    } else {
+                        isValid = (pass.toLowerCase() === role.toLowerCase());
+                    }
+                    if (isValid) {
+                        sessionStorage.setItem("gbt_role", role);
+                        window.location.reload();
+                    } else {
+                        document.getElementById("loginError").style.display = "block";
+                    }
+                });
+            }
+        }
+    </script>
 </body>
 </html>
